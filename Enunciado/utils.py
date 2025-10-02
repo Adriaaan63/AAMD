@@ -6,15 +6,17 @@ def cleanData(data):
     data["score"] = data["score"].apply(lambda x:  str(x).replace(",","."))
     data = data.drop(data[data["user score"] == "tbd"].index)
     data["user score"] = data["user score"].apply(lambda x:  str(x).replace(",","."))
-    data["score"] = data["score"].astype(np.float64)
     data["user score"] = data["user score"].astype(np.float64)
+    data["score"] = data["score"].astype(np.float64)
     data["score"] = data["score"] / 10.0
     return data
 
 def cleanDataMulti(data):
     data = cleanData(data)
+    
     data["critics"] = data["critics"].astype(np.float64)
     data["users"] = data["users"].astype(np.float64)
+
     return data
 
 def load_data_csv(path,x_colum,y_colum):
@@ -44,7 +46,17 @@ def zscore_normalize_features(X):
     # sigma will have shape (n,)
     # element-wise, subtract mu for that column from each example,
     # divide by std for that column
-    return 0, 0, 0
+
+    mu = np.mean(X, axis = 0)
+
+    sigma = np.std(X, axis=0, ddof=0)
+
+    sigma_for_div = sigma.copy()
+    sigma_for_div[sigma_for_div == 0] = 1.0
+
+    X_norm = (X - mu) / sigma_for_div
+
+    return X_norm, mu, sigma
 
 def load_data_csv_multi(path,x1_colum,x2_colum,x3_colum,y_colum):
     data = pd.read_csv(path)
@@ -54,6 +66,7 @@ def load_data_csv_multi(path,x1_colum,x2_colum,x3_colum,y_colum):
     x3 = data[x3_colum].to_numpy()
     X = np.array([x1, x2, x3])
     X = X.T
+    zscore_normalize_features(X)
     y = data[y_colum].to_numpy()
     return X, y
 

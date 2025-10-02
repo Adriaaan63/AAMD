@@ -17,6 +17,8 @@ class LinearRegMulti(LinearReg):
         Determinate the weight of the regularization.
     """
     def __init__(self, x, y,w,b, lambda_):
+        super().__init__(x, y, w, b)
+        self.lambda_ = lambda_
         return
 
     def f_w_b(self, x):
@@ -33,7 +35,11 @@ class LinearRegMulti(LinearReg):
     """
     
     def _regularizationL2Cost(self):
-        return 0
+        
+        m = len(self.x)
+
+        reg_cost = (self.lambda_ / (2 * m)) * np.sum(self.w ** 2)
+        return reg_cost
     
     """
     Compute the regularization gradient (is private method: start with _ )
@@ -44,7 +50,9 @@ class LinearRegMulti(LinearReg):
     """ 
     
     def _regularizationL2Gradient(self):
-        return 0
+        m = len(self.x)
+        reg_grad = (self.lambda_ / m) * self.w 
+        return reg_grad
 
     
 def cost_test_multi_obj(x,y,w_init,b_init):
@@ -55,4 +63,5 @@ def cost_test_multi_obj(x,y,w_init,b_init):
 def compute_gradient_multi_obj(x,y,w_init,b_init):
     lr = LinearRegMulti(x,y,w_init,b_init,0)
     dw,db = lr.compute_gradient()
+    print(f"[DEBUG] : {dw} y {db}") 
     return dw,db
