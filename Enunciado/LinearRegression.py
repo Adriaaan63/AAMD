@@ -57,15 +57,11 @@ class LinearReg:
       dj_db (scalar): The gradient of the cost w.r.t. the parameter b     
      """
     def compute_gradient(self):
-        dj_dw = 0
-        dj_db = 0
         m = len(self.x)
         y_pred = self.f_w_b( self.x)
         sumError = y_pred - self.y
-        # -------------------------------
-        #   SOBRECARGAR OPERACION PARA MULTI
-        #
-        dj_dw = (1 / m) * sumError @ self.x
+        
+        dj_dw = (1 / m) * np.dot(sumError, self.x) 
         dj_db = (1 / m) * np.sum((y_pred - self.y))
 
         return np.float64(dj_dw), np.float64(dj_db)
@@ -98,10 +94,8 @@ class LinearReg:
         for i in range(num_iters):  
             dj_dw, dj_db = self.compute_gradient()
 
-            # -------------------------------
-            #   SOBRECARGAR OPERACION PARA MULTI
-            #
-            self.w = self.w - np.multiply(alpha, dj_dw)
+            
+            self.w = self.w - alpha *  dj_dw
             self.b= self.b - alpha * dj_db
 
             J_history.append(self.compute_cost())

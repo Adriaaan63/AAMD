@@ -50,23 +50,22 @@ def zscore_normalize_features(X):
     mu = np.mean(X, axis = 0)
 
     sigma = np.std(X, axis=0, ddof=0)
-
-    sigma_for_div = sigma.copy()
-    sigma_for_div[sigma_for_div == 0] = 1.0
-
-    X_norm = (X - mu) / sigma_for_div
+    X_norm = (X - mu) / sigma 
 
     return X_norm, mu, sigma
 
 def load_data_csv_multi(path,x1_colum,x2_colum,x3_colum,y_colum):
     data = pd.read_csv(path)
     data = cleanDataMulti(data)
+
     x1 = data[x1_colum].to_numpy()
     x2 = data[x2_colum].to_numpy()
     x3 = data[x3_colum].to_numpy()
-    X = np.array([x1, x2, x3])
-    X = X.T
-    zscore_normalize_features(X)
+    X = np.array([x1, x2, x3]).T   # shape (m, 3)
+
+    # Normalización Z-score
+    X, mu, sigma = zscore_normalize_features(X)
+
     y = data[y_colum].to_numpy()
     return X, y
 

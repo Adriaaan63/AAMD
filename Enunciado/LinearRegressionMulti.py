@@ -54,7 +54,28 @@ class LinearRegMulti(LinearReg):
         reg_grad = (self.lambda_ / m) * self.w 
         return reg_grad
 
+    def compute_cost(self):
+        m = len(self.x)
+        y_pred = self.f_w_b(self.x)
+
+        total_cost = (1 / (2 * m)) * np.sum((self.y - y_pred) ** 2)
+        total_cost += self._regularizationL2Cost()
+        return np.float64(total_cost)
     
+    def compute_gradient(self):
+       
+        m = len(self.x)
+        y_pred = self.f_w_b( self.x)
+
+        err = y_pred - self.y
+
+        dj_dw = (1 / m) * (self.x.T @ err) + self._regularizationL2Gradient()
+        dj_db = (1 / m) * np.sum(err)
+
+        return np.array(dj_dw, dtype=np.float64), np.float64(dj_db)
+
+
+
 def cost_test_multi_obj(x,y,w_init,b_init):
     lr = LinearRegMulti(x,y,w_init,b_init,0)
     cost = lr.compute_cost()
@@ -63,5 +84,4 @@ def cost_test_multi_obj(x,y,w_init,b_init):
 def compute_gradient_multi_obj(x,y,w_init,b_init):
     lr = LinearRegMulti(x,y,w_init,b_init,0)
     dw,db = lr.compute_gradient()
-    print(f"[DEBUG] : {dw} y {db}") 
     return dw,db

@@ -106,11 +106,9 @@ def run_gradient_descent_multi(x_train, y_train,alpha = 0.01,iterations=1500,lam
 
 
 def test_gradient_descent_multi(x_train, y_train):
-      print(f"[DEBUG] : x: {x_train.shape}, y: {y_train.shape}" )
       w1, b1 = run_gradient_descent_multi(x_train, y_train,0.01,1500,0)
       w1Sol = [0.71606939, 0.08070621, -0.07954303]
       b1Sol = 6.988604092799393
-      print("--------------------------------")
       print(f"w,b found by gradient descent with labmda 0 ({w1Sol} {b1Sol}):", w1, b1)
       numSucces = GetNumGradientsSuccess(w1,w1Sol,b1,b1Sol)
 
@@ -132,15 +130,19 @@ print("First Part, Linear Regression")
 
 x, y = load_data_csv("data/games-data.csv", "score", "user score")
 #TO-DO the main program.
-#test_cost_one(x, y)
-#test_gradient_one(x, y)
-#test_gradient_descent_one(x, y,0,0)
+test_cost_one(x, y)
+test_gradient_one(x, y)
+
+# Este test no se porque no funciona, creo que es porque hay que meter 
+# unos valores especificos de w y b para que funcione
+
+#test_gradient_descent_one(x, y,0.1,0.1)
 
 
 #Second Part, Linear Regression Multivariable
 print("Second Part, Linear Regression Multivariable")
 X, Y = load_data_csv_multi("data/games-data.csv", "score", "critics", "users", "user score")
 #TO-DO the main program.
-#test_cost_multi(X, Y)
-#test_gradient_multi(X, Y)
+test_cost_multi(X, Y)
+test_gradient_multi(X, Y)
 test_gradient_descent_multi(X,Y)
