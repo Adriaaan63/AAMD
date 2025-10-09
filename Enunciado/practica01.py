@@ -129,14 +129,14 @@ def test_gradient_descent_multi(x_train, y_train):
 print("First Part, Linear Regression")
 
 x, y = load_data_csv("data/games-data.csv", "score", "user score")
+x=x/10
 #TO-DO the main program.
 test_cost_one(x, y)
 test_gradient_one(x, y)
 
-# Este test no se porque no funciona, creo que es porque hay que meter 
-# unos valores especificos de w y b para que funcione
 
-#test_gradient_descent_one(x, y,0.1,0.1)
+w,b=run_gradient_descent_one(x, y)
+test_gradient_descent_one(x, y,w,b)
 
 
 #Second Part, Linear Regression Multivariable
