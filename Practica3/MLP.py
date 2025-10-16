@@ -29,7 +29,7 @@ class MLP:
         z (array_like): activation signal received by the layer.
     """
     def _sigmoid(self,z):
-        return 0
+        return 1 / (1 + np.exp(-z))
 
     """
     Run the feedwordwar neural network step
@@ -44,6 +44,17 @@ class MLP:
     """
     def feedforward(self,x):
         a1,a2,a3,z2,z3 = 0
+        m = self._size(x)
+        a1 = np.hstack[np.ones((m, 1)),x]
+
+        z2 = a1 @ self.theta1.T
+        a2 = self._sigmoid(z2)
+        a2 = np.hstack[np.ones((m, 1)), a2]
+
+        z3 = a2 @ self.theta2.T
+        a3 = self._sigmoid(z3)
+        
+
         return a1,a2,a3,z2,z3 # devolvemos a parte de las activaciones, los valores sin ejecutar la función de activación
 
 
