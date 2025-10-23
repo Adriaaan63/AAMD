@@ -43,13 +43,12 @@ class MLP:
     z2,z3 (array_like): signal fuction of two last layers
     """
     def feedforward(self,x):
-        a1,a2,a3,z2,z3 = 0
         m = self._size(x)
-        a1 = np.hstack[np.ones((m, 1)),x]
+        a1 = np.hstack((np.ones((m, 1)), x))
 
         z2 = a1 @ self.theta1.T
         a2 = self._sigmoid(z2)
-        a2 = np.hstack[np.ones((m, 1)), a2]
+        a2 = np.hstack((np.ones((m, 1)), a2))
 
         z3 = a2 @ self.theta2.T
         a3 = self._sigmoid(z3)
@@ -69,8 +68,19 @@ class MLP:
 	------
 	J (scalar): the cost.
     """
-    def compute_cost(self, yPrime,y): # calcula solo el coste, para no ejecutar nuevamente el feedforward.
-        J = 0
+    def compute_cost(self, yPrime, y):
+        if y.shape != yPrime.shape:
+            raise ValueError(f"Shape mismatch: y has {y.shape}, yPrime has {yPrime.shape}")
+
+        m = y.shape[0]
+
+        # Evitar log(0)
+        eps = 1e-12
+        yPrime = np.clip(yPrime, eps, 1 - eps)
+
+        # Coste de entropía cruzada
+        J = -(1 / m) * np.sum(y * np.log(yPrime) + (1 - y) * np.log(1 - yPrime))
+
         return J
     
 
@@ -85,7 +95,7 @@ class MLP:
 	p (scalar): the class index with the highest activation value.
     """
     def predict(self,a3):
-        p = -1
+        p = np.argmax(a3, axis = 1)
         return p
 
     

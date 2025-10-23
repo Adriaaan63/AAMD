@@ -59,13 +59,44 @@ Implementation of the one hot encoding... You must use OneHotEncoder function of
 Probably need to use reshape(-1, 1) to change size of the data
 """
 def one_hot_encoding(Y):
-    YEnc = 0
-    #TO-DO: implements
-    return YEnc
+    """
+    Convierte un vector de etiquetas (m,) con valores 0..K-1
+    en una matriz one-hot (m, K) usando sklearn.OneHotEncoder.
+    """
+    Y = np.array(Y)
+
+    # Asegurar que tenga forma (m, 1)
+    if Y.ndim == 1:
+        Y = Y.reshape(-1, 1)
+
+    # Crear el codificador con categorías automáticas
+    encoder = OneHotEncoder(sparse_output=False, categories='auto')
+    Y_onehot = encoder.fit_transform(Y)
+
+    return Y_onehot
+    
 
 """
 Implementation of the accuracy metrics function
 """
-def accuracy(P,Y):
-	#TO-DO: implements
-	return -1
+def accuracy(P, Y):
+    P = np.array(P)
+    Y = np.array(Y)
+
+    # Si P son probabilidades -> pasar a índices
+    if P.ndim == 2:
+        P_idx = np.argmax(P, axis=1)
+    else:
+        P_idx = P.flatten().astype(int)
+
+    # Si Y es one-hot -> pasar a índices
+    if Y.ndim == 2 and Y.shape[1] > 1:
+        Y_idx = np.argmax(Y, axis=1)
+    else:
+        Y_idx = Y.flatten().astype(int)
+
+    if P_idx.shape[0] != Y_idx.shape[0]:
+        raise ValueError("P y Y deben tener el mismo número de ejemplos")
+
+    acc_frac = np.mean(P_idx == Y_idx)   # 0..1
+    return acc_frac

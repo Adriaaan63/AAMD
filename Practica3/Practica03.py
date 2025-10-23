@@ -9,7 +9,11 @@ x,y = load_data('data/ex3data1.mat')
 theta1, theta2 = load_weights('data/ex3weights.mat')
 
 #TO-DO: calculate a testing a prediction and cost.
+mlp = MLP(theta1, theta2)
+a1, a2, a3, z2, z3 = mlp.feedforward(x)
 
-#predict_test()
+p = mlp.predict(a3)
+predict_test(p,y, accuracy)
+y_one_hot = one_hot_encoding(y)
 
-#compute_cost_test()
+compute_cost_test(mlp, a3,y_one_hot )
