@@ -36,3 +36,36 @@ def predict_test(p,y,accuracyFunction):
     assert np.isclose(accuracy,0.9752), f"Case 2: accuracy must be 0.9752 for a perfect prediction but got {accuracy}"
     print("\033[92mAll tests passed!")
 
+def confusion_matrix_binary(y_true, y_pred, positive_class=0):
+    """
+    Calcula la matriz de confusión binaria y métricas de evaluación.
+
+    Args:
+        y_true (array_like): etiquetas reales (valores entre 0 y 9)
+        y_pred (array_like): etiquetas predichas
+        positive_class (int): clase que se considera positiva (por defecto 0)
+
+    Returns:
+        dict: contiene TP, TN, FP, FN, precision, recall y F1
+    """
+    # Convertimos a binario: 1 si es clase positiva, 0 en otro caso
+    y_true_bin = (y_true == positive_class).astype(int)
+    y_pred_bin = (y_pred == positive_class).astype(int)
+
+    TP = np.sum((y_true_bin == 1) & (y_pred_bin == 1))
+    TN = np.sum((y_true_bin == 0) & (y_pred_bin == 0))
+    FP = np.sum((y_true_bin == 0) & (y_pred_bin == 1))
+    FN = np.sum((y_true_bin == 1) & (y_pred_bin == 0))
+
+    precision = TP / (TP + FP) if (TP + FP) != 0 else 0
+    recall = TP / (TP + FN) if (TP + FN) != 0 else 0
+    F1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) != 0 else 0
+
+    print(f"Matriz de confusión (clase 0 positiva):")
+    print(f"TP: {TP}, FP: {FP}, FN: {FN}, TN: {TN}")
+    print(f"Precision: {precision:.4f}, Recall: {recall:.4f}, F1-Score: {F1:.4f}")
+
+    return {
+        "TP": TP, "FP": FP, "FN": FN, "TN": TN,
+        "precision": precision, "recall": recall, "F1": F1
+    }
