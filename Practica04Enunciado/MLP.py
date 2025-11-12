@@ -24,8 +24,8 @@ class MLP:
         self.epslom = epislom
 
         # Inicialización aleatoria de pesos Theta1 y Theta2 con rango [-eps, eps]
-        self.theta1 = np.random.uniform(low=-epislom, high=epislom, size=self.theta1.shape())
-        self.theta2 = np.random.uniform(low=-epislom, high=epislom, size=self.theta2.shape())
+        self.theta1 = np.random.uniform(low=-epislom, high=epislom,size=(self.hiden_layer, self.input_layer + 1))
+        self.theta2 = np.random.uniform(low=-epislom, high=epislom,size=(self.output_layer, self.hiden_layer + 1))
 
         """
     Reset the theta matrix created in the constructor by both theta matrix manualy loaded.
@@ -103,7 +103,7 @@ class MLP:
 	J (scalar): the cost.
     """
     def compute_cost(self, yPrime,y, lambda_): # es una función interna por eso empieza por _
-        m = y.shape(0)                                                  #número de ejemplos de entrenamiento
+        m = y.shape[0]                                                  #número de ejemplos de entrenamiento
         eps = 1e-12                                                     # Define un valor mínimo para evitar que np.log(0) dé error o infinito.
         yhat = np.clip(yPrime, eps, 1-eps)                              # Asegura que todas las predicciones estén entre [1e-12, 1 - 1e-12]. Así, nunca calculas log(0) o log(1) exacto
         term = - ( y * np.log(yhat) + (1 - y) * np.log(1 - yhat) )      #Calcula el error de cada ejemplo y cada salida según la fórmula de entropía cruzada
@@ -123,8 +123,7 @@ class MLP:
 	p (scalar): the class index with the highest activation value.
     """
     def predict(self,a3):
-        ##TO-DO
-        p = 0
+        p = np.argmax(a3, axis=1)
         return p
     
 
@@ -142,8 +141,33 @@ class MLP:
     grad1, grad2: the gradient matrix (same shape than theta1 and theta2)
     """
     def compute_gradients(self, x, y, lambda_):
-        ##TO-DO
-        J,grad1,grad2 = 0
+        m = x.shape[0]
+        # forward
+        a1, a2, a3, z2, z3 = self.feedforward(x)
+
+        # Calculo del coste(error total) (incluye regularización) 
+        J = self.compute_cost(a3, y, lambda_)
+
+        # backpropagation
+        # Primero comparamos con la real para ver la diferencia y en cuanto nos equivocamos
+        delta3 = a3 - y
+
+        #Se propaga el error para atras desde la salida a la capa oculta
+        a2_no_bias = a2[:,1:] #pesos capa 2 sin las bias
+        delta2 = delta3.dot(self.theta2[:,1:]) * self._sigmoidPrime(a2_no_bias) 
+
+        # acumuladores de gradiente, para saber cuanto se debe corregir cada peso
+        Delta1 = delta2.T.dot(a1)
+        Delta2 = delta3.T.dot(a2)
+
+        # gradientes sin regularizar
+        grad1 = (1.0 / m) * Delta1
+        grad2 = (1.0 / m) * Delta2
+
+        #Regularizacion 
+        grad1 += self._regularizationL2Gradient(self.theta1, lambda_, m)
+        grad2 += self._regularizationL2Gradient(self.theta2, lambda_, m)
+
         return (J, grad1, grad2)
     
     """
@@ -159,8 +183,9 @@ class MLP:
 	L2 Gradient value
     """
     def _regularizationL2Gradient(self, theta, lambda_, m):
-        ##TO-DO
-        return 0
+        reg = np.zeros_like(theta)
+        reg[:, 1:] = (lambda_ / m) * theta[:, 1:]   # no regulariza los bias
+        return reg
     
     
     """
