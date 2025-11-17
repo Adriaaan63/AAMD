@@ -35,6 +35,11 @@ def MLP_test(X_train,y_train, X_test, y_test):
         y_train_labels = y_train.argmax(axis=1)
         y_test_labels  = y_test.argmax(axis=1)
 
+        # OBSERVACION: SKLearn funciona actualizando en cada iteracion el learning rate, nosotros no lo actualizamos. 
+        # Por eso, el valor es muy distinto a lo que da nuestra prediccion. 
+        # Para que la prediccion de SKLearn funcione parecida a la nuestra sería necesario usar
+        # solver = 'sgd'; poner el batch_size = X_train.shape[0] para que deje de ser estocástico;  poner el learning_rate = 'constant'
+        # y desactivar el momentum (= 0)
         clf = MLPClassifier(
             hidden_layer_sizes=(25,),
             activation='logistic',       # misma función de activación
