@@ -1,4 +1,4 @@
-from utils import debugInitializeWeights, computeNumericalGradient
+from utils import debugInitializeWeights, computeNumericalGradient, accuracy
 from sklearn.metrics import accuracy_score
 import numpy as np
 
@@ -57,5 +57,5 @@ Check that MLP are correctly implemented.
 """
 def MLP_test_step(mlp_backprop_predict,alpha,X_train,y_train, X_test, y_test, lambda_, num_ite, baseLineAccuracy, verbose=0):
     y_pred=mlp_backprop_predict(X_train,y_train,X_test,alpha,lambda_,num_ite,verbose)
-    accu = accuracy_score(y_test, y_pred)
+    accu = accuracy(y_pred, y_test)
     print(f"Calculate accuracy for lambda = {(lambda_):1.5f} : {(accu):1.5f} expected accuracy is aprox: {(baseLineAccuracy):1.5f}")

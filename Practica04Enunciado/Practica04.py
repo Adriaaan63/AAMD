@@ -30,12 +30,18 @@ def MLP_test(X_train,y_train, X_test, y_test):
 def main():
     print("Main program")
     #Test 1
+    print("\n== Running gradient checks (Test 1) ==")
     gradientTest()
 
     ## TO-DO: descoment both test and create the needed code to execute them.
-    
+    print("\n== Preparing data for Test 2 ==")
+    X, y = load_data('data/ex3data1.mat')
+    Y = one_hot_encoding(y)
+
+    x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.33, random_state=0)
     #Test 2
-    #MLP_test()
+    print("\n== Running MLP_test (Test 2) ==")
+    MLP_test(x_train, y_train, x_test, y_test )
 
     
 

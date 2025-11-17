@@ -211,8 +211,13 @@ class MLP:
     def backpropagation(self, x, y, alpha, lambda_, numIte, verbose=0):
         Jhistory = []
         for i in range(numIte):
-            J = 0
-            ##TO-DO: calculate gradients and update both theta matrix
+            ##calculate gradients and update both theta matrix
+            J, grad1, grad2 = self.compute_gradients(x, y, lambda_)
+
+            self.theta1 = self.theta1 - alpha * grad1
+            self.theta2 = self.theta2 - alpha * grad2
+
+            Jhistory.append(J)
             if verbose > 0 :
                 if i % verbose == 0 or i == (numIte-1):
                     print(f"Iteration {(i+1):6}: Cost {float(J):8.4f}   ")
