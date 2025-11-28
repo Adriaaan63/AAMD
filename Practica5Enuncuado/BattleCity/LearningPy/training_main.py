@@ -4,7 +4,7 @@ import os
 import argparse
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import OneHotEncoder
 
 import Utils
@@ -16,24 +16,48 @@ EXPORT_DIR_DATA_MINING = "exports/data_mining"
 # --- CONFIGUYRACION ---
 HIDDEN_LAYERS = [50, 30]
 ITERATIONS = 10000
-LEARNING_RATE = 1.5
-REGULARIZATION_LAMBDA = 0.001
+REGULARIZATION_LAMBDA = 0.0001
 SEED = 42
 EPSILOM_INIT = 0.12
 TEST_SIZE = 0.2
 
-def train_sklearn_mlp(X_train, X_test, y_train, y_test):
-    print("\n>>> Entrenando MLP con SKLEARN...")
+# --- FUNCIONES DE PLOTTING --- 
+def save_confusion_matrix(y_true, y_pred, title, filename):
+    cm = confusion_matrix(y_true, y_pred)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+    plt.figure(figsize=(8, 8))
+    disp.plot(cmap=plt.cm.Blues, values_format='d')
+    plt.title(title)
+    path = os.path.join(EXPORT_DIR_TRAINING, filename)
+    plt.savefig(path)
+    plt.close()
+    print(f">> Matriz de Confusión guardada en: {path}")
 
-    hidden_layers = tuple(HIDDEN_LAYERS)
+def save_loss_curve(costs, title, filename):
+    plt.figure(figsize=(10, 6))
+    plt.plot(costs, color='red', linewidth=2)
+    plt.xlabel('Iteraciones')
+    plt.ylabel('Coste (Loss)')
+    plt.title(title)
+    plt.grid(True)
+    path = os.path.join(EXPORT_DIR_TRAINING, filename)
+    plt.savefig(path)
+    plt.close()
+    print(f">> Gráfica de Costes guardada en: {path}")
+
+# --- FUNCIONES DE ENTRENAMIENTO ---
+
+def train_sklearn_mlp(X_train, X_test, y_train, y_test, hidden_layers_sizes, solver, activation, max_iters, lr, reg_lambda, model_name="sklearn"):
+    hidden_layers = tuple(hidden_layers_sizes)
 
     clf = MLPClassifier(
         hidden_layer_sizes=hidden_layers,
-        activation='logistic',
-        solver='lbfgs',
-        max_iter=ITERATIONS, 
-        alpha=REGULARIZATION_LAMBDA, 
-        learning_rate_init=LEARNING_RATE,
+        activation=activation,
+        solver=solver,     #Mejor para conjuntos de datos pequeños
+        max_iter=max_iters, 
+        alpha=reg_lambda, 
+        learning_rate_init=lr,
+        learning_rate= 'constant',
         random_state=SEED,
         verbose=True,
     )
@@ -41,7 +65,36 @@ def train_sklearn_mlp(X_train, X_test, y_train, y_test):
     clf.fit(X_train, y_train)
 
     acc = accuracy_score(y_test, clf.predict(X_test))
-    print(f"Accuracy Sklearn: {acc*100:.2f}%")
+    print(f"Accuracy {model_name} ({solver}): {acc*100:.2f}%")
+
+    y_pred = clf.predict(X_test)
+    save_confusion_matrix(y_test, y_pred, 
+        f"Matriz Confusión {model_name}_{solver}_{activation}", 
+        f"conf_matrix_{model_name}_{solver}_{activation}.png"
+    )
+    
+    if hasattr(clf, 'loss_curve_'):
+        save_loss_curve(clf.loss_curve_,
+            f"Curva de Aprendizaje {model_name}_{solver}_{activation}",
+            f"loss_curve_{model_name}_{solver}_{activation}.png"
+        )
+    else:
+        print(f"AVISO: El solver '{solver}' no genera curva de pérdida en Sklearn.")
+
+    return clf, X_train, acc
+
+def train_sklearn_mlp_export(X_train, X_test, y_train, y_test, solver):
+    print(f"\n>>> Entrenando MLP con SKLEARN (Solver: {solver}) [Modo Export]...")
+
+    clf, X_train, acc = train_sklearn_mlp(
+        X_train, X_test, y_train, y_test,
+        hidden_layers_sizes=HIDDEN_LAYERS,
+        solver=solver,
+        activation='logistic',
+        max_iters=ITERATIONS,
+        lr=0.001,
+        reg_lambda=REGULARIZATION_LAMBDA
+    )
 
     #Exportar 
     Utils.ExportAllformatsMLPSKlearn(
@@ -70,7 +123,7 @@ def train_custom_mlp(X_train, X_test, y_train, y_test):
     costs = mlp.backpropagation(
         X_train,
         y_train_oh,
-        alpha=LEARNING_RATE,
+        alpha=1.5,
         lambda_=REGULARIZATION_LAMBDA,
         numIte=ITERATIONS,
         verbose=100
@@ -82,31 +135,32 @@ def train_custom_mlp(X_train, X_test, y_train, y_test):
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy Custom MLP: {acc*100:.2f}%")
 
-    #Grafica coste
-    plt.figure()
-    plt.plot(costs)
-    plt.xlabel('Iteraciones')
-    plt.ylabel('Coste')
-    plt.title('Coste durante el entrenamiento custom')
-    plot_path = os.path.join(EXPORT_DIR_TRAINING, 'coste_custom_mlp.png')
-    plt.savefig(plot_path)
-    print(">> Gráfica de coste generada.")
+    save_loss_curve(costs, "Coste Custom MLP", "coste_custom_mlp.png")
+    save_confusion_matrix(y_test, y_pred, "Matriz Confusión Custom MLP", "conf_matrix_custom.png")
 
     return acc
 
 if __name__ == "__main__":
     # Gestion de argumentos
-    parser = argparse.ArgumentParser(description="Entrenamiento para IA de BattleCity")
-    parser.add_argument('-sk', action='store_true', help="Ejecutar modelo MLP de Sklearn")
-    parser.add_argument('-custom', action='store_true', help="Ejecutar modelo propio MLP de Sklearn")
+    parser = argparse.ArgumentParser(description="Entrenamiento IA BattleCity")
+    parser.add_argument('-sk', nargs='?', const='lbfgs', default=None, 
+                        help="Ejecutar Sklearn. Uso: '-sk' (usa lbfgs) o '-sk adam'")
+    
+    parser.add_argument('-sknex', action='store_true', help="Ejecutar Sklearn Turbo (sin export)")
+    parser.add_argument('-custom', action='store_true', help="Ejecutar Custom MLP")
     args = parser.parse_args()
 
-    if not args.sk and not args.custom:
-        print("ERROR: Debe especificar al menos un modelo a ejecutar: -sk y/o -custom")
+    if args.sk is None and not args.custom and not args.sknex:
+        print("ERROR: Especifica modelo:")
+        print("  python main.py -sk          (Sklearn con lbfgs)")
+        print("  python main.py -sk adam     (Sklearn con adam)")
+        print("  python main.py -custom      (Tu MLP)")
+        print("  python main.py -sknex       (Turbo Mode)")
         exit()
 
     run_sk = args.sk
     run_custom = args.custom
+    run_sknex = args.sknex
 
     try:
         X = np.load(os.path.join(EXPORT_DIR_DATA_MINING, 'X_train.npy'))
@@ -125,9 +179,22 @@ if __name__ == "__main__":
     acc_custom = None
 
     if run_sk:
-        acc_sklearn = train_sklearn_mlp(X_train, X_test, y_train, y_test)
+        solver = args.sk
+        acc_sklearn = train_sklearn_mlp_export(X_train, X_test, y_train, y_test, solver)
     if run_custom: 
         acc_custom = train_custom_mlp(X_train, X_test, y_train, y_test)
+    if run_sknex:
+        print(">>> Entrenando MLP con SKLEARN (ReLu sin exportacion)...")
+        train_sklearn_mlp(
+            X_train, X_test, y_train, y_test,
+            hidden_layers_sizes=[128, 64],
+            solver='lbfgs',
+            activation='relu',
+            max_iters=5000,
+            lr=0.01,         # IGNORADO por lbfgs, pero necesario por la función
+            reg_lambda=1e-5
+
+        )
 
     # --- RESUMEN FINAL ---
     print("\n=== RESUMEN DE EJECUCION ===")
