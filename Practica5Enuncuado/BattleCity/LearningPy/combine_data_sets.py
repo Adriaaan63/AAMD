@@ -28,6 +28,7 @@ def leer_csv_si_es_victoria(nombre_archivo: str) -> Optional[pd.DataFrame]:
         print(f"Resultado final inesperado en: {os.path.basename(nombre_archivo)} con '{resultado_partida}'")
         return None
 
+#definir como funcion en un futuro y llamarla desde el script principal
 def main():
     ruta_carpeta = 'raw_data_sets' 
     patron_archivos = 'TankTraining_*.csv' 
