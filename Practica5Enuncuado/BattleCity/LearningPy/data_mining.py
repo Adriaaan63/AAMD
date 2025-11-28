@@ -3,74 +3,54 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+import os
 
+# --- CONFIG ---
 FILE_CSV = 'TankTraining_Victorias_Filtradas.csv'
-ACCION_DISPARO = 5
+EXPORT_DIR = "exports/data_mining"
 
-print("Cargando datos desde:", FILE_CSV)
+print("=== 1. DATA MINING Y PREPROCESADO ===")
 
+# 1. Cargar
 df = pd.read_csv(FILE_CSV)
-# Se quita la columna de tiempo si existe
-if 'time' in df.columns:
-    df = df.drop(columns=['time'])
+if 'time' in df.columns: df = df.drop(columns=['time'])
 
-print(f"Datos cargados: {df.shape}")
-print(f"Muestras originales: {len(df)}")
+print(f"Muestras totales: {len(df)}")
 
-# Como el agente siempre va a disparar , limpiamos las acciones de disparo
-df = df[df['action'] != ACCION_DISPARO]
+# 2. Limpieza
+df = df[df['action'].isin([0, 1, 2, 3, 4])] # Solo movimientos
 
-print(f"Muestras después de limpiar acciones de disparo: {len(df)}")
+print(f"Muestras tras limpieza: {len(df)}")
 
-# QUITAR EN EL FUTURO, SOLO PARA VISUALIZAR MEJOR
-# --- CHEQUEO DE SEGURIDAD (BALANCE) ---
-conteo = df['action'].value_counts()
-print("\nDistribución de acciones restantes:")
-print(conteo)
+# 3. Separar X e y
+X = df.drop(columns=['action']).values
+y = df['action'].values
 
-if 0 not in conteo or conteo[0] < 100:
-    print("\nADVERTENCIA: Te quedan muy pocos ejemplos de 'Quedarse Quieto' (Acción 0).")
-    print("   El tanque podría moverse sin parar. Si ves que vibra mucho, recupera los disparos como 'Stop'.")
-else:
-    print("\nBalance correcto: Hay suficientes ejemplos de parada.")
-
-# Seprar X e y
-# X todos los datos que no son la accion
-X = df.drop(columns=['action'])
-# y son todas las acciones
-y = df['action']
-
-# Estandarizar los datos
+# 4. Normalizar (StandardScaler)
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
-# Visualizacion PCA
+# Guardar Scaler para Unity
+mean = scaler.mean_
+std = np.sqrt(scaler.var_)
+if not os.path.exists(EXPORT_DIR):
+    os.makedirs(EXPORT_DIR)
+with open(os.path.join(EXPORT_DIR, "StandardScaler.txt"), "w") as f:
+    f.write("MEAN\n" + ",".join(map(str, mean)) + "\n")
+    f.write("STD\n" + ",".join(map(str, std)) + "\n")
+print(">> StandardScaler.txt generado.")
+
+# 5. Visualizar (PCA)
 pca = PCA(n_components=2)
 X_pca = pca.fit_transform(X_scaled)
-
-plt.figure(figsize=(10, 7))
-# Mapa de colores para las acciones
-scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='viridis', alpha=0.6, s=10)
-plt.colorbar(scatter, label='Acción (0:Stop, 1-4:Mover)')
-plt.title('PCA: Distribución del Movimiento (Sin Disparos)')
-plt.xlabel('Componente 1')
-plt.ylabel('Componente 2')
-plt.savefig('grafica_pca_limpia.png')
+plt.figure(figsize=(8,6))
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap='viridis', alpha=0.5, s=10)
+plt.colorbar(label='Acción')
+plt.title('PCA: Distribución de Movimientos')
+plt.savefig(os.path.join(EXPORT_DIR, 'grafica_pca.png'))
 print(">> Gráfica PCA generada.")
 
-# Exportamos
-# Scaler para Unity
-media = scaler.mean_
-varianza = scaler.var_
-std = np.sqrt(varianza)
-
-with open("StandardScaler.txt", "w") as f:
-    f.write("mean:" + ",".join(map(str, media)) + "\n")
-    f.write("std:" + ",".join(map(str, std)) + "\n")
-
-np.save('X_train.npy', X_scaled)
-np.save('y_train.npy', y.values)
-
-print(">> Datos exportados: X_train.npy, y_train.npy, StandardScaler.txt")
-
-
+# 6. Guardar Datos Procesados
+np.save(os.path.join(EXPORT_DIR, 'X_train.npy'), X_scaled)
+np.save(os.path.join(EXPORT_DIR, 'y_train.npy'), y)
+print(">> Datos .npy guardados.")
