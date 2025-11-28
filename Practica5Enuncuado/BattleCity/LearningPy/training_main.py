@@ -143,7 +143,7 @@ def train_sklearn_variant(X_train, X_test, y_train, y_test):
     return acc
 
 def train_knn(X_train, X_test, y_train, y_test):
-    print("\n>>> KNN (Ejercicio 7)...")
+    print("\n>>> Entrenando con KNN...")
     if not os.path.exists(EXPORT_DIR_KNN): os.makedirs(EXPORT_DIR_KNN)
     
     knn = KNeighborsClassifier(n_neighbors=5, metric='manhattan', weights='distance') 
@@ -187,7 +187,7 @@ if __name__ == "__main__":
 
     
     if args.compare:
-        print("--- EJERCICIO 4: COMPARACIÓN ---")
+        print("--- COMPARACION ---")
         acc_sk = train_sklearn_compare(X_train, X_test, y_train, y_test, do_export=False)
         acc_custom = train_custom_compare(X_train, X_test, y_train, y_test)
         print(f"\nDiferencia: {abs(acc_sk - acc_custom)*100:.2f}%")
