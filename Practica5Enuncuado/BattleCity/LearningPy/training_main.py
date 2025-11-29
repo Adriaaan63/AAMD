@@ -6,6 +6,8 @@ import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import OneHotEncoder
 
@@ -15,6 +17,7 @@ from models.MLP import MLP
 EXPORT_DIR_TRAINING = "exports/training_main"
 EXPORT_DIR_DATA_MINING = "exports/data_mining"
 EXPORT_DIR_KNN = "exports/knn_model"
+EXPORT_DIR_TREES = "exports/trees_models"
 
 # --- CONFIGURACION PARA COMPARACION MLP (CUSTOM - SK)
 HIDDEN_LAYERS_COMPARE = [50, 30]
@@ -141,11 +144,14 @@ def train_sklearn_variant(X_train, X_test, y_train, y_test):
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Variant", EXPORT_DIR_TRAINING, "conf_matrix_variant.png")
     
     return acc
+# ====================================================
+# PROBABLEMENTE SEA MEJOR KNN QUE MLP PARA ESTE JUEGO
+# ====================================================
 
 def train_knn(X_train, X_test, y_train, y_test):
     print("\n>>> Entrenando con KNN...")
     if not os.path.exists(EXPORT_DIR_KNN): os.makedirs(EXPORT_DIR_KNN)
-    
+    # metric = manhattan -> calcula distancias siguiendo angulos rectos (mejor para cuadricula)
     knn = KNeighborsClassifier(n_neighbors=5, metric='manhattan', weights='distance') 
     knn.fit(X_train, y_train)
     
@@ -155,6 +161,36 @@ def train_knn(X_train, X_test, y_train, y_test):
     
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión KNN", EXPORT_DIR_KNN, "conf_matrix_knn.png")
     
+    return acc
+
+# --- ARBOLES DE DECISION ---
+def train_decision_tree(X_train, X_test, y_train, y_test): 
+    print("\n>>> Arbol de decision")
+    if not os.path.exists(EXPORT_DIR_TREES) : os.makedirs(EXPORT_DIR_TREES)
+
+    # Se puede cambiar la profundidad dependiendo de lo que se quiera memorizar
+    clf = DecisionTreeClassifier(max_depth=20, random_state=SEED)
+    clf.fit(X_train, y_train)
+
+    y_pred = clf.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Accuracy Decision Tree: {acc*100:.2f}%")
+
+    save_confusion_matrix(y_test, y_pred, "Matriz Confusión Decision Tree", EXPORT_DIR_TREES, "conf_matrix_dtree.png")
+    return acc
+
+def train_random_forest(X_train, X_test, y_train, y_test): 
+    print("\n>>> RANDOM FOREST (Bosque Aleatorio)...")
+    if not os.path.exists(EXPORT_DIR_TREES): os.makedirs(EXPORT_DIR_TREES)
+
+    clf = RandomForestClassifier(n_estimators=100, max_depth=20, random_state=SEED)
+    clf.fit(X_train, y_train)
+
+    y_pred = clf.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Accuracy Random Forest: {acc*100:.2f}%")
+
+    save_confusion_matrix(y_test, y_pred, "Matriz Confusión Random Forest", EXPORT_DIR_TREES, "conf_matrix_rndforest.png")
     return acc
 
 # --- MAIN ---
@@ -167,12 +203,15 @@ if __name__ == "__main__":
     parser.add_argument('-custom', action='store_true', help="Ejecutar Custom MLP")
     parser.add_argument('-skvariant', action='store_true', help="Entrenar SKLearn Potente (LBFGS)")
     parser.add_argument('-knn', action='store_true', help="Ejecutar KNN")
+
+    parser.add_argument('-dt', action='store_true', help="Ejecutar Decision Tree")
+    parser.add_argument('-rf', action='store_true', help="Ejecutar Random Forest")
     
     args = parser.parse_args()
     
     if not any(vars(args).values()):
-        print("Uso: python training_main.py [-compare] [-sk [export]] [-custom] [-skvariant] [-knn]")
-        exit()
+       print("Uso: python training_main.py [-compare] [-sk] [-custom] [-skvariant] [-knn] [-dt] [-rf]")
+       exit()
 
     try:
         X = np.load(os.path.join(EXPORT_DIR_DATA_MINING, 'X_train.npy'))
@@ -201,11 +240,8 @@ if __name__ == "__main__":
         should_export = (args.sk == 'export')
         train_sklearn_compare(X_train, X_test, y_train, y_test, do_export=should_export)
 
-    if args.custom: 
-        train_custom_compare(X_train, X_test, y_train, y_test)
-
-    if args.skvariant:
-        train_sklearn_variant(X_train, X_test, y_train, y_test)
-
-    if args.knn:
-        train_knn(X_train, X_test, y_train, y_test)
+    if args.custom: train_custom_compare(X_train, X_test, y_train, y_test)
+    if args.skvariant: train_sklearn_variant(X_train, X_test, y_train, y_test)
+    if args.knn: train_knn(X_train, X_test, y_train, y_test)
+    if args.dt: train_decision_tree(X_train, X_test, y_train, y_test)
+    if args.rf: train_random_forest(X_train, X_test, y_train, y_test)
