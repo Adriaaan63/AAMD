@@ -6,6 +6,7 @@ using System.Text;
 using Unity.XR.Oculus.Input;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UIElements;
 
 
 
@@ -152,6 +153,25 @@ public class MLAgent : MonoBehaviour
                 //Debe respetar el mismo orden que los datos.
                 //TODO Llamar a RunFeedForward
                 //guardar la toma de decisiones y despues validar si son correctas.
+                // 1) recuperar percepción raw
+                float[] raw = perception.GetModelInput(); 
+                raw = raw.Where((value, index) => !indicesToRemove.Contains(index)).ToArray();
+
+                // 3) OneHot (si aplica)
+                raw = oneHotEncoding.Transform(raw);
+
+                // 4) StandardScaler
+                raw = standarScaler.Transform(raw);
+
+                // 5) FeedForward
+                float[] outputs = this.mlpModel.FeedForward(raw);
+
+                // 6) seleccionar acción (argmax)
+                float max;
+                int idx = this.mlpModel.GetIndexMaxValue(outputs, out max);
+                action = idx;
+
+                // 7) registrar
                 recorder.AIRecord(action);
                 break;
         }
@@ -169,7 +189,8 @@ public class MLAgent : MonoBehaviour
         //permite eliminar columnas de la percepción si las habeis eliminado en el modelo.
         modelInput = modelInput.Where((value, index) => !indicesToRemove.Contains(index)).ToArray();
         //TODO Hacer las transformaciónes necesarias para ejecutar el modelo
-
+        modelInput = oneHotEncoding.Transform(modelInput);
+        modelInput = standarScaler.Transform(modelInput);
         //Guardamos el model input con las trasformaciones para poder ejecutarlo desde paython y comporbar si funciona.
         recorder.AIRecord(modelInput);
         float[] outputs = this.mlpModel.FeedForward(modelInput);

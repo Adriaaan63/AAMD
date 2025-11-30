@@ -42,7 +42,20 @@ public class OneHotEncoding
         List<float> output = new List<float>();
         for (int i = 0; i < input.Length; i++)
         {
-            //TODO implementar el OHE.
+            if (extraElements.ContainsKey(i))
+            {
+                int cats = extraElements[i];
+                int val = (int)input[i];
+                if (val < 0 || val >= cats) val = 0;
+                for (int j = 0; j < cats; j++)
+                {
+                    output.Add(j == val ? 1f : 0f);
+                }
+            }
+            else
+            {
+                output.Add(input[i]);
+            }
         }
         return output.ToArray();
     }

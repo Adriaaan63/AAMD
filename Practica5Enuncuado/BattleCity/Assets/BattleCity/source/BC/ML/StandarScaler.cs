@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using UnityEngine.Windows;
 
 public class StandarScaler
 {
@@ -30,9 +32,15 @@ public class StandarScaler
     /// <returns></returns>
     public float[] Transform(float[] a_input)
     {
-        float[] scaled = new float[a_input.Length];
-        //TODO implementar
+        if(mean == null && std == null) throw new Exception("Scaler no inicializado.");
+        if(a_input.Length != mean.Length) throw new Exception($"Scaler espera {mean.Length} features, pero recibe {a_input.Length}.");
 
+        float[] scaled = new float[a_input.Length];
+        for(int i = 0; i < a_input.Length; i++)
+        {
+            float stdValue = std[i] == 0f ? 1e-6f : std[i];
+            scaled[i] = (a_input[i] - mean[i]) / stdValue;
+        }
         return a_input;
     }
 }

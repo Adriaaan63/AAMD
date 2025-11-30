@@ -176,4 +176,70 @@ public class PlayerPerception : PerceptionBase
         p[(int)Player_PARAMETER_ID.ACT_5] = perception.PreviousActions[4];*/
         return p;
     }
+
+    public float[] GetModelInput()
+    {
+        int N = Enum.GetNames(typeof(Player_PARAMETER_ID)).Length;
+        float[] input = new float[N];
+
+        // 0–3: Perception neighborhood
+        for (int i = 0; i < PerceptionNeighborhood.Length; i++)
+            input[i] = PerceptionNeighborhood[i];
+
+        // 4–7: Perception neighborhood distance
+        for (int i = 0; i < PerceptionNeighborhoodDistance.Length; i++)
+            input[4 + i] = PerceptionNeighborhoodDistance[i];
+
+        // 8–9: Command Center
+        input[(int)Player_PARAMETER_ID.COMMAND_CENTER_X] = CommandCenterPosition.x;
+        input[(int)Player_PARAMETER_ID.COMMAND_CENTER_Y] = CommandCenterPosition.y;
+
+        // 10–13: Enemies
+        if (agentRivals[0] != null)
+        {
+            input[(int)Player_PARAMETER_ID.AGENT_1_X] = agentRivals[0].position.x;
+            input[(int)Player_PARAMETER_ID.AGENT_1_Y] = agentRivals[0].position.y;
+        }
+        else
+        {
+            input[(int)Player_PARAMETER_ID.AGENT_1_X] = 100;
+            input[(int)Player_PARAMETER_ID.AGENT_1_Y] = 100;
+        }
+
+        if (agentRivals[1] != null)
+        {
+            input[(int)Player_PARAMETER_ID.AGENT_2_X] = agentRivals[1].position.x;
+            input[(int)Player_PARAMETER_ID.AGENT_2_Y] = agentRivals[1].position.y;
+        }
+        else
+        {
+            input[(int)Player_PARAMETER_ID.AGENT_2_X] = 100;
+            input[(int)Player_PARAMETER_ID.AGENT_2_Y] = 100;
+        }
+
+        // 14: Can fire
+        input[(int)Player_PARAMETER_ID.CAN_FIRE] = CanFire ? 1 : 0;
+
+        // 15: Health
+        input[(int)Player_PARAMETER_ID.HEALTH] = health.health;
+
+        // 16–17: Life position
+        if (GameLogic.Get().Life != null)
+        {
+            input[(int)Player_PARAMETER_ID.LIFE_X] = LifePosition.x;
+            input[(int)Player_PARAMETER_ID.LIFE_Y] = LifePosition.y;
+        }
+        else
+        {
+            input[(int)Player_PARAMETER_ID.LIFE_X] = 100;
+            input[(int)Player_PARAMETER_ID.LIFE_Y] = 100;
+        }
+
+        // 18–19: Exit position
+        input[(int)Player_PARAMETER_ID.EXIT_X] = ExitPosition.x;
+        input[(int)Player_PARAMETER_ID.EXIT_Y] = ExitPosition.y;
+
+        return input;
+    }
+
 }

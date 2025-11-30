@@ -1,5 +1,9 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Globalization;
+using System.Linq;
 using UnityEngine;
+using System;
 
 public class MLPParameters
 {
@@ -68,7 +72,29 @@ public class MLPModel
         //TODO: implement feedworward.
         //the size of the output layer depends on what actions you have performed in the game.
         //By default it is 7 (number of possible actions) but some actions may not have been performed and therefore the model has assumed that they do not exist.
-        return new float[5];
+        float[] a = input;
+        for (int layer = 0; layer < mlpParameters.GetCoeff().Count; layer++)
+        {
+            var W = mlpParameters.GetCoeff()[layer];
+            var b = mlpParameters.GetInter()[layer];
+            int outDim = b.Length;
+            int inDim = a.Length;
+            float[] z = new float[outDim];
+            for (int i = 0; i < outDim; i++)
+            {
+                float sum = b[i];
+                for (int j = 0; j < inDim; j++)
+                {
+                    sum += W[i, j] * a[j];
+                }
+                z[i] = sum;
+            }
+            if (layer < mlpParameters.GetCoeff().Count - 1)
+                a = z.Select(v => sigmoid(v)).ToArray();
+            else
+                a = SoftMax(z);
+        }
+        return a;
     }
 
     /// <summary>
@@ -78,21 +104,41 @@ public class MLPModel
     /// <returns></returns>
     private float sigmoid(float z)
     {
-        //TODO implementar
-        return 0f;
+        if (z >= 0)
+        {
+            float ez = (float)Math.Exp(-z);
+            return 1.0f / (1.0f + ez);
+        }
+        else
+        {
+            float ez = (float)Math.Exp(z);
+            return ez / (1.0f + ez);
+        }
     }
 
 
     /// <summary>
-    /// CAlculo de la soft max, se le pasa el vector de la ulrima capa oculta y devuelve el mismo vector, pero procesado
+    /// Calculo de la soft max, se le pasa el vector de la ultima capa oculta y devuelve el mismo vector, pero procesado
     /// aplicando softmax a cada uno de los elementos
     /// </summary>
     /// <param name="zArr"></param>
     /// <returns></returns>
     public float[] SoftMax(float[] zArr)
     {
-        //TODO implementar
-        return zArr;
+        float max = zArr.Max();
+        double sumExp = 0.0;
+        double[] exps = new double[zArr.Length];
+        for (int i = 0; i < zArr.Length; i++)
+        {
+            exps[i] = Math.Exp(zArr[i] - max);
+            sumExp += exps[i];
+        }
+        float[] res = new float[zArr.Length];
+        for (int i = 0; i < zArr.Length; i++)
+        {
+            res[i] = (float)(exps[i] / sumExp);
+        }
+        return res;
     }
 
     /// <summary>
@@ -117,7 +163,14 @@ public class MLPModel
     {
         max = output[0];
         int index = 0;
-        //TODO impleemntar.
+        for (int i = 1; i < output.Length; i++)
+        {
+            if (output[i] > max)
+            {
+                max = output[i];
+                index = i;
+            }
+        }
         return index;
     }
 }
