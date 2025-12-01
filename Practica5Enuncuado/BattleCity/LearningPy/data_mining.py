@@ -12,13 +12,10 @@ EXPORT_DIR = "exports/data_mining"
 
 print("=== 1. DATA MINING Y PREPROCESADO ===")
 
-# 1. Cargar
+# Cargar
 df = pd.read_csv(FILE_CSV)
-if 'time' in df.columns: df = df.drop(columns=['time'])
 
-print(f"Muestras totales: {len(df)}")
-
-# 2. Limpieza
+# Limpieza
 columns_to_erase = ['time',
                     'CAN_FIRE', 
                     'COMMAND_CENTER_X',
@@ -33,11 +30,11 @@ df = df[df['action'].isin([0, 1, 2, 3, 4])] # Solo movimientos
 
 feature_names = list(df.drop(columns=['action']).columns)
 
-# 3. Separar X e y
+# Separar X e y
 X = df.drop(columns=['action']).values
 y = df['action'].values
 
-# 4. Normalizar (StandardScaler)
+# Normalizar con StatndarScaler
 scaler = StandardScaler()
 X_scaled = scaler.fit_transform(X)
 
@@ -51,7 +48,7 @@ with open(os.path.join(EXPORT_DIR, "StandardScaler.txt"), "w") as f:
     f.write(",".join(map(str, std)) + "\n")
 print(">> StandardScaler.txt generado.")
 
-# 5. Visualizar (PCA)
+# Visualizar grafica PCA
 pca = PCA(n_components=2)
 X_pca = pca.fit_transform(X_scaled)
 plt.figure(figsize=(8,6))
@@ -61,12 +58,12 @@ plt.title('PCA: Distribución de Movimientos')
 plt.savefig(os.path.join(EXPORT_DIR, 'grafica_pca.png'))
 print(">> Gráfica PCA generada.")
 
-# 6. Guardar Datos Procesados
+# Guardar los datos
 np.save(os.path.join(EXPORT_DIR, 'X_train.npy'), X_scaled)
 np.save(os.path.join(EXPORT_DIR, 'y_train.npy'), y)
 print(">> Datos .npy guardados.")
 
-# 7. feature_order.json: lista de nombres de columnas en el orden exacto usado para X
+# feature_order.json: lista de nombres de columnas en el orden exacto usado para X
 os.makedirs(EXPORT_DIR, exist_ok=True)
 with open(os.path.join(EXPORT_DIR, 'feature_order.json'), 'w') as f:
     json.dump(feature_names, f, indent=2)
