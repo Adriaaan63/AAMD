@@ -47,8 +47,8 @@ std = np.sqrt(scaler.var_)
 if not os.path.exists(EXPORT_DIR):
     os.makedirs(EXPORT_DIR)
 with open(os.path.join(EXPORT_DIR, "StandardScaler.txt"), "w") as f:
-    f.write("MEAN\n" + ",".join(map(str, mean)) + "\n")
-    f.write("STD\n" + ",".join(map(str, std)) + "\n")
+    f.write(",".join(map(str, mean)) + "\n")
+    f.write(",".join(map(str, std)) + "\n")
 print(">> StandardScaler.txt generado.")
 
 # 5. Visualizar (PCA)
