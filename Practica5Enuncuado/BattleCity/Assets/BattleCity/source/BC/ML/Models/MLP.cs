@@ -77,22 +77,28 @@ public class MLPModel
         {
             var W = mlpParameters.GetCoeff()[layer];
             var b = mlpParameters.GetInter()[layer];
-            int outDim = b.Length;
-            int inDim = a.Length;
-            float[] z = new float[outDim];
-            for (int i = 0; i < outDim; i++)
+            
+            int rows = W.GetLength(0); //numero entradas capa actual
+            int cols = W.GetLength(1); //numero neuronas capa siguiente
+            float[] nextLayer = new float[cols];
+            for (int c = 0; c < cols; c++)
             {
-                float sum = b[i];
-                for (int j = 0; j < inDim; j++)
+                float sum = 0;
+                for (int r = 0; r < rows; r++)
                 {
-                    sum += W[i, j] * a[j];
+                    sum += a[r] * W[r, c];
                 }
-                z[i] = sum;
+                sum += b[c];
+                if(layer < mlpParameters.GetCoeff().Count - 1)
+                {
+                    nextLayer[c] = sigmoid(sum);
+                }
+                else
+                {
+                    nextLayer[c] = sum; //ultima capa
+                }
             }
-            if (layer < mlpParameters.GetCoeff().Count - 1)
-                a = z.Select(v => sigmoid(v)).ToArray();
-            else
-                a = SoftMax(z);
+            a = nextLayer;
         }
         return a;
     }
