@@ -15,14 +15,23 @@ print("=== 1. DATA MINING Y PREPROCESADO ===")
 # 1. Cargar
 df = pd.read_csv(FILE_CSV)
 if 'time' in df.columns: df = df.drop(columns=['time'])
-feature_names = list(df.drop(columns=['action']).columns)
 
 print(f"Muestras totales: {len(df)}")
 
 # 2. Limpieza
+columns_to_erase = ['time',
+                    'CAN_FIRE', 
+                    'COMMAND_CENTER_X',
+                    'COMMAND_CENTER_Y']
+
+for col in columns_to_erase: 
+    if col in df.columns:
+        df = df.drop(columns=[col])
+        print(f">> Columna '{col}' eliminada.")
+        
 df = df[df['action'].isin([0, 1, 2, 3, 4])] # Solo movimientos
 
-print(f"Muestras tras limpieza: {len(df)}")
+feature_names = list(df.drop(columns=['action']).columns)
 
 # 3. Separar X e y
 X = df.drop(columns=['action']).values
@@ -38,8 +47,8 @@ std = np.sqrt(scaler.var_)
 if not os.path.exists(EXPORT_DIR):
     os.makedirs(EXPORT_DIR)
 with open(os.path.join(EXPORT_DIR, "StandardScaler.txt"), "w") as f:
-    f.write("MEAN\n" + ",".join(map(str, mean)) + "\n")
-    f.write("STD\n" + ",".join(map(str, std)) + "\n")
+    f.write(",".join(map(str, mean)) + "\n")
+    f.write(",".join(map(str, std)) + "\n")
 print(">> StandardScaler.txt generado.")
 
 # 5. Visualizar (PCA)

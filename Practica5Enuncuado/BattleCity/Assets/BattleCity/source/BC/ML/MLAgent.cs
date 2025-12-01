@@ -157,8 +157,8 @@ public class MLAgent : MonoBehaviour
                 float[] raw = perception.GetModelInput(); 
                 raw = raw.Where((value, index) => !indicesToRemove.Contains(index)).ToArray();
 
-                // 3) OneHot (si aplica)
-                raw = oneHotEncoding.Transform(raw);
+                //// 3) OneHot (si aplica)
+                //raw = oneHotEncoding.Transform(raw);
 
                 // 4) StandardScaler
                 raw = standarScaler.Transform(raw);
