@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import argparse
-import pickle
+import Utils
 from sklearn.model_selection import train_test_split
 from sklearn.neural_network import MLPClassifier
 from sklearn.neighbors import KNeighborsClassifier
@@ -11,7 +11,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.preprocessing import OneHotEncoder
 
-import Utils
 from models.MLP import MLP
 
 EXPORT_DIR_TRAINING = "exports/training_main"
@@ -57,25 +56,13 @@ def save_loss_curve(costs, title, folder, filename):
     plt.savefig(path)
     plt.close()
 
-# --- MODOS DE ENTRENAMIENTO ---
+# --- MODELOS DE ENTRENAMIENTO ---
 
-def train_sklearn_compare(X_train, X_test, y_train, y_test, do_export=False):
+# MLP de SKLearn que vamos a usar para entrenar el modelo de unity
+def train_sklearn_mlp(X_train, X_test, y_train, y_test):
     print(f"\n>>> SKLEARN (Modo Comparación: SGD + Logistic + LR={LEARNING_RATE_COMPARE})...")
     
-    
-    clf = MLPClassifier(
-        hidden_layer_sizes=tuple(HIDDEN_LAYERS_COMPARE),
-        activation='logistic',       
-        solver='sgd',                
-        learning_rate='constant',   
-        learning_rate_init=LEARNING_RATE_COMPARE,
-        alpha=REGULARIZATION_COMPARE,            
-        max_iter=ITERATIONS_COMPARE,
-        batch_size=X_train.shape[0], # Full-Batch como nuestra MLP
-        random_state=SEED,
-        tol=1e-6,                    
-        verbose=True
-    )
+    clf = create_mlp_for_unity(X_train)
 
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
@@ -85,22 +72,19 @@ def train_sklearn_compare(X_train, X_test, y_train, y_test, do_export=False):
     if hasattr(clf, 'loss_curve_'):
         save_loss_curve(clf.loss_curve_, "Curva Sklearn (SGD)", EXPORT_DIR_TRAINING, "loss_sklearn_compare.png")
     
-    save_confusion_matrix(y_test, y_pred, "Matriz Confusión Sklearn (Compare)", EXPORT_DIR_TRAINING, "conf_matrix_sklearn.png")
-    
-    # 2. Exportación Condicional
-    if do_export:
-        print(">> Exportando modelo SKLEARN para Unity...")
-        Utils.ExportAllformatsMLPSKlearn(
-            clf, X_train,
-            os.path.join(EXPORT_DIR_TRAINING, 'mlp.pkl'),
-            os.path.join(EXPORT_DIR_TRAINING, 'mlp.onnx'),
-            os.path.join(EXPORT_DIR_TRAINING, 'mlp.json'),
-            os.path.join(EXPORT_DIR_TRAINING, 'mlp.custom')
-        )
+    save_confusion_matrix(y_test, y_pred, "Matriz Confusión Sklearn", EXPORT_DIR_TRAINING, "conf_matrix_sklearn.png")
+        
+    Utils.ExportAllformatsMLPSKlearn(
+        clf, X_train,
+        os.path.join(EXPORT_DIR_TRAINING, 'mlp.pkl'),
+        os.path.join(EXPORT_DIR_TRAINING, 'mlp.onnx'),
+        os.path.join(EXPORT_DIR_TRAINING, 'mlp.json'),
+        os.path.join(EXPORT_DIR_TRAINING, 'mlp.custom')
+    )
 
     return acc
 
-def train_custom_compare(X_train, X_test, y_train, y_test):
+def train_custom_mlp(X_train, X_test, y_train, y_test):
     print(f"\n>>> CUSTOM MLP (Modo Comparación: SGD + Logistic + LR={LEARNING_RATE_COMPARE})...")
     
     encoder = OneHotEncoder(sparse_output=False)
@@ -122,12 +106,13 @@ def train_custom_compare(X_train, X_test, y_train, y_test):
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy Custom Comparación: {acc*100:.2f}%")
     
-    # Gráficas
+    # Graficas
     save_loss_curve(costs, "Curva Custom MLP", EXPORT_DIR_TRAINING, "loss_custom_compare.png")
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Custom", EXPORT_DIR_TRAINING, "conf_matrix_custom.png")
 
     return acc
 
+# Modelos de sklearn algo mejor que la que exportamos a unity
 def train_sklearn_variant(X_train, X_test, y_train, y_test):
     print("\n>>> SKLEARN VARIANT (LBFGS + ReLu)...")
     clf = MLPClassifier(
@@ -144,10 +129,8 @@ def train_sklearn_variant(X_train, X_test, y_train, y_test):
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Variant", EXPORT_DIR_TRAINING, "conf_matrix_variant.png")
     
     return acc
-# ====================================================
-# PROBABLEMENTE SEA MEJOR KNN QUE MLP PARA ESTE JUEGO
-# ====================================================
 
+# --- KNN ---
 def train_knn(X_train, X_test, y_train, y_test):
     print("\n>>> Entrenando con KNN...")
     if not os.path.exists(EXPORT_DIR_KNN): os.makedirs(EXPORT_DIR_KNN)
@@ -193,6 +176,34 @@ def train_random_forest(X_train, X_test, y_train, y_test):
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Random Forest", EXPORT_DIR_TREES, "conf_matrix_rndforest.png")
     return acc
 
+def load_and_split_data(): 
+    try:
+        X = np.load(os.path.join(EXPORT_DIR_DATA_MINING, 'X_train.npy'))
+        y = np.load(os.path.join(EXPORT_DIR_DATA_MINING, 'y_train.npy'))
+    except:
+        print("Error cargando datos. Ejecuta data_mining.py")
+        exit()
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, random_state=SEED)
+
+    return X_train, X_test, y_train, y_test
+
+def create_mlp_for_unity(X_train):
+    clf = MLPClassifier(
+        hidden_layer_sizes=tuple(HIDDEN_LAYERS_COMPARE),
+        activation='logistic',       
+        solver='sgd',                
+        learning_rate='constant',   
+        learning_rate_init=LEARNING_RATE_COMPARE,
+        alpha=REGULARIZATION_COMPARE,            
+        max_iter=ITERATIONS_COMPARE,
+        batch_size=X_train.shape[0], # Full-Batch como nuestra MLP
+        random_state=SEED,
+        tol=1e-6,                    
+        verbose=True
+    )
+    return clf
+
 # --- MAIN ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -213,22 +224,15 @@ if __name__ == "__main__":
        print("Uso: python training_main.py [-compare] [-sk] [-custom] [-skvariant] [-knn] [-dt] [-rf]")
        exit()
 
-    try:
-        X = np.load(os.path.join(EXPORT_DIR_DATA_MINING, 'X_train.npy'))
-        y = np.load(os.path.join(EXPORT_DIR_DATA_MINING, 'y_train.npy'))
-    except:
-        print("Error cargando datos. Ejecuta data_mining.py")
-        exit()
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=TEST_SIZE, random_state=SEED)
+    X_train, X_test, y_train, y_test = load_and_split_data()
     
     if not os.path.exists(EXPORT_DIR_TRAINING): os.makedirs(EXPORT_DIR_TRAINING)
 
     
     if args.compare:
         print("--- COMPARACION ---")
-        acc_sk = train_sklearn_compare(X_train, X_test, y_train, y_test, do_export=False)
-        acc_custom = train_custom_compare(X_train, X_test, y_train, y_test)
+        acc_sk = train_sklearn_mlp(X_train, X_test, y_train, y_test)
+        acc_custom = train_custom_mlp(X_train, X_test, y_train, y_test)
         print(f"\nDiferencia: {abs(acc_sk - acc_custom)*100:.2f}%")
         if acc_sk > 0.8 and acc_custom > 0.8:
             print("OBJETIVO CUMPLIDO: Ambos > 80% con mismos parametros.")
@@ -237,11 +241,12 @@ if __name__ == "__main__":
 
    
     if args.sk:
-        should_export = (args.sk == 'export')
-        train_sklearn_compare(X_train, X_test, y_train, y_test, do_export=should_export)
+        
+        train_sklearn_mlp(X_train, X_test, y_train, y_test)
 
-    if args.custom: train_custom_compare(X_train, X_test, y_train, y_test)
+    if args.custom: train_custom_mlp(X_train, X_test, y_train, y_test)
     if args.skvariant: train_sklearn_variant(X_train, X_test, y_train, y_test)
     if args.knn: train_knn(X_train, X_test, y_train, y_test)
     if args.dt: train_decision_tree(X_train, X_test, y_train, y_test)
     if args.rf: train_random_forest(X_train, X_test, y_train, y_test)
+   
