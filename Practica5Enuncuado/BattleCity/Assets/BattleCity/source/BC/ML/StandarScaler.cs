@@ -21,7 +21,7 @@ public class StandarScaler
         for (int i = 0; i < stdStr.Length; i++)
         {
             std[i] = float.Parse(stdStr[i], System.Globalization.CultureInfo.InvariantCulture);
-            std[i] = Mathf.Sqrt(std[i]);
+            //std[i] = Mathf.Sqrt(std[i]);
         }
     }
 
@@ -41,6 +41,6 @@ public class StandarScaler
             float stdValue = std[i] == 0f ? 1e-6f : std[i];
             scaled[i] = (a_input[i] - mean[i]) / stdValue;
         }
-        return a_input;
+        return scaled;
     }
 }
