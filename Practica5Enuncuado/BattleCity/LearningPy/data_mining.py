@@ -12,7 +12,11 @@ EXPORT_DIR = "exports/data_mining"
 COLUMNS_TO_ERASE = ['time',
                     'CAN_FIRE', 
                     'COMMAND_CENTER_X',
-                    'COMMAND_CENTER_Y']
+                    'COMMAND_CENTER_Y',
+                    'HEALTH',
+                    'LIFE_X',
+                    'LIFE_Y',
+                    ]
 
 def mine_data(): 
     print(">>> Comenzando mineria de datos")

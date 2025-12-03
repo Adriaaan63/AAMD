@@ -11,9 +11,6 @@
   "AGENT_1_Y",
   "AGENT_2_X",
   "AGENT_2_Y",
-  "HEALTH",
-  "LIFE_X",
-  "LIFE_Y",
   "EXIT_X",
   "EXIT_Y"
 ]

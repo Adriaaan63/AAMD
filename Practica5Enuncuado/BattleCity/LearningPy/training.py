@@ -67,10 +67,10 @@ def train_sklearn_mlp(X_train, X_test, y_train, y_test):
     clf.fit(X_train, y_train)
     y_pred = clf.predict(X_test)
     acc = accuracy_score(y_test, y_pred)
-    print(f"Accuracy Sklearn Comparación: {acc*100:.2f}%")
+    print(f"Accuracy Sklearn (SGD): {acc*100:.2f}%")
     
     if hasattr(clf, 'loss_curve_'):
-        save_loss_curve(clf.loss_curve_, "Curva Sklearn (SGD)", EXPORT_DIR_TRAINING, "loss_sklearn_compare.png")
+        save_loss_curve(clf.loss_curve_, "Curva Sklearn (SGD)", EXPORT_DIR_TRAINING, "loss_graphic_sklearn.png")
     
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Sklearn", EXPORT_DIR_TRAINING, "conf_matrix_sklearn.png")
         
@@ -107,7 +107,7 @@ def train_custom_mlp(X_train, X_test, y_train, y_test):
     print(f"Accuracy Custom Comparación: {acc*100:.2f}%")
     
     # Graficas
-    save_loss_curve(costs, "Curva Custom MLP", EXPORT_DIR_TRAINING, "loss_custom_compare.png")
+    save_loss_curve(costs, "Curva Custom MLP", EXPORT_DIR_TRAINING, "loss_graphic_custom.png")
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Custom", EXPORT_DIR_TRAINING, "conf_matrix_custom.png")
 
     return acc
