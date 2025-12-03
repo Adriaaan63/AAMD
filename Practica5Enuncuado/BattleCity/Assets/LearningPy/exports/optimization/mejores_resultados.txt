@@ -1,0 +1,4 @@
+SKLEARN MLP | Acc: 80.54% | Params: {'activation': 'tanh', 'alpha': 0.01, 'hidden_layer_sizes': (128, 64), 'learning_rate_init': 0.001, 'solver': 'lbfgs'}
+KNN | Acc: 82.15% | Params: {'metric': 'manhattan', 'n_neighbors': 3, 'weights': 'distance'}
+RANDOM FOREST | Acc: 84.90% | Params: {'criterion': 'entropy', 'max_depth': None, 'n_estimators': 100}
+CUSTOM MLP | Acc: 73.51% | Layers=[50, 30], LR=1.5, Reg=0.0001

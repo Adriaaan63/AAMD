@@ -189,7 +189,7 @@ public class MLAgent : MonoBehaviour
         //permite eliminar columnas de la percepción si las habeis eliminado en el modelo.
         modelInput = modelInput.Where((value, index) => !indicesToRemove.Contains(index)).ToArray();
         //TODO Hacer las transformaciónes necesarias para ejecutar el modelo
-        modelInput = oneHotEncoding.Transform(modelInput);
+        //modelInput = oneHotEncoding.Transform(modelInput);    
         modelInput = standarScaler.Transform(modelInput);
         //Guardamos el model input con las trasformaciones para poder ejecutarlo desde paython y comporbar si funciona.
         recorder.AIRecord(modelInput);

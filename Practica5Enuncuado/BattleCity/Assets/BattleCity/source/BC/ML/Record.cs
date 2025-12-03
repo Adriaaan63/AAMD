@@ -112,7 +112,7 @@ public class Record : MonoBehaviour
             string date = DateTime.Now.ToString();
             date = date.Replace("/", "_");
             date = date.Replace(":", "_");
-            File.WriteAllText(csvOutput + "_" + date + ".csv", csvFormat);
+            File.WriteAllText("./LearningPy/raw_data_sets/" + csvOutput + "_" + date + ".csv", csvFormat);
             Debug.Log("File " + csvOutput + " save");
         }
     }

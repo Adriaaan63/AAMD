@@ -20,7 +20,7 @@ def mine_data():
     df = pd.read_csv(FILE_CSV)
     
     # Limpieza
-    feature_names = clean(df)
+    df,feature_names = clean(df)
 
     # Separar X e y
     X = df.drop(columns=['action']).values
@@ -50,7 +50,7 @@ def clean(df):
     with open(os.path.join(EXPORT_DIR, 'feature_order.json'), 'w') as f:
         json.dump(feature_names, f, indent=2)
     print(">> feature_order.json generado.")
-
+    return df, feature_names
 def normalize_and_save_scaler(X):
     # Normalizar con StatndarScaler
     scaler = StandardScaler()

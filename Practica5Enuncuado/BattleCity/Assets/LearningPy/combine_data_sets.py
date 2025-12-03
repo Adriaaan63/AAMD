@@ -3,7 +3,7 @@ import glob
 import os
 from typing import Optional
 
-def leer_csv_si_es_victoria(nombre_archivo: str) -> Optional[pd.DataFrame]:
+def _leer_csv_si_es_victoria(nombre_archivo: str) -> Optional[pd.DataFrame]:
     resultado_partida = ""
     
     try:
@@ -29,7 +29,7 @@ def leer_csv_si_es_victoria(nombre_archivo: str) -> Optional[pd.DataFrame]:
         return None
 
 #definir como funcion en un futuro y llamarla desde el script principal
-def main():
+def combine():
     ruta_carpeta = 'raw_data_sets' 
     patron_archivos = 'TankTraining_*.csv' 
     
@@ -50,7 +50,7 @@ def main():
     victorias_contadas = 0
 
     for nombre_archivo in lista_archivos:
-        df_individual = leer_csv_si_es_victoria(nombre_archivo)
+        df_individual = _leer_csv_si_es_victoria(nombre_archivo)
         
         if df_individual is not None:
             lista_dataframes.append(df_individual)
@@ -72,6 +72,3 @@ def main():
     nombre_salida = 'TankTraining_Victorias_Filtradas.csv'
     df_total_victorias.to_csv(nombre_salida, index=False)
     print(f"Dataset de Victorias guardado como '{nombre_salida}'.")
-
-if __name__ == "__main__":
-    main()
