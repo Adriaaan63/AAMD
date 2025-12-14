@@ -3,3 +3,6 @@ https://github.com/Adriaaan63/AAMD.git
 Autores:
 Adrián Castellanos Ormeño 
 Marcos Pérez Martínez 
+
+Todos nuestros archivos .py están en un directorio llamado "learningPy"
+Los datos para entrenar a los modelos los definimos a partir de un optimization.py, donde definimos un espacio de búsqueda con las configuraciones más comunes para cada algoritmo. Por lo que es el script quien configura automáticamente la configuración que obtuvo el mayor porcentaje de acierto (Accuracy). Este script te data los datos que luego tendrás que pasar al training.py
