@@ -204,8 +204,7 @@ def create_mlp_for_unity(X_train):
     )
     return clf
 
-# --- MAIN ---
-if __name__ == "__main__":
+def main(args_list=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('-compare', action='store_true', help="Ejecutar Comparación (Custom vs Sklearn)")
     
@@ -218,7 +217,7 @@ if __name__ == "__main__":
     parser.add_argument('-dt', action='store_true', help="Ejecutar Decision Tree")
     parser.add_argument('-rf', action='store_true', help="Ejecutar Random Forest")
     
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
     
     if not any(vars(args).values()):
        print("Uso: python training_main.py [-compare] [-sk] [-custom] [-skvariant] [-knn] [-dt] [-rf]")
@@ -250,3 +249,6 @@ if __name__ == "__main__":
     if args.dt: train_decision_tree(X_train, X_test, y_train, y_test)
     if args.rf: train_random_forest(X_train, X_test, y_train, y_test)
    
+# --- MAIN ---
+if __name__ == "__main__":
+    main()
