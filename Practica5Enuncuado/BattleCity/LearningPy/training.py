@@ -59,18 +59,19 @@ def save_loss_curve(costs, title, folder, filename):
 # --- MODELOS DE ENTRENAMIENTO ---
 
 # MLP de SKLearn que vamos a usar para entrenar el modelo de unity
-def train_sklearn_mlp(X_train, X_test, y_train, y_test):
+def train_sklearn_mlp(X_train, X_test, y_train_oh, y_test):
     print(f"\n>>> SKLEARN (Modo Comparación: SGD + Logistic + LR={LEARNING_RATE_COMPARE})...")
     
     clf = create_mlp_for_unity(X_train)
 
-    clf.fit(X_train, y_train)
-    y_pred = clf.predict(X_test)
+    clf.fit(X_train, y_train_oh)
+    y_pred_oh = clf.predict(X_test)
+    y_pred = np.argmax(y_pred_oh, axis=1)
     acc = accuracy_score(y_test, y_pred)
-    print(f"Accuracy Sklearn (SGD): {acc*100:.2f}%")
+    print(f"Accuracy Sklearn (ADAM): {acc*100:.2f}%")
     
     if hasattr(clf, 'loss_curve_'):
-        save_loss_curve(clf.loss_curve_, "Curva Sklearn (SGD)", EXPORT_DIR_TRAINING, "loss_graphic_sklearn.png")
+        save_loss_curve(clf.loss_curve_, "Curva Sklearn (ADAM)", EXPORT_DIR_TRAINING, "loss_graphic_sklearn.png")
     
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Sklearn", EXPORT_DIR_TRAINING, "conf_matrix_sklearn.png")
         
@@ -84,11 +85,9 @@ def train_sklearn_mlp(X_train, X_test, y_train, y_test):
 
     return acc
 
-def train_custom_mlp(X_train, X_test, y_train, y_test):
+def train_custom_mlp(X_train, X_test, y_train_oh, y_test):
     print(f"\n>>> CUSTOM MLP (Modo Comparación: SGD + Logistic + LR={LEARNING_RATE_COMPARE})...")
     
-    encoder = OneHotEncoder(sparse_output=False)
-    y_train_oh = encoder.fit_transform(y_train.reshape(-1, 1))
     
     mlp = MLP(X_train.shape[1], HIDDEN_LAYERS_COMPARE, y_train_oh.shape[1], seed=SEED, epsilom=EPSILOM_INIT)
     print(f"Arquitectura: {mlp.layer_sizes}")
@@ -113,16 +112,17 @@ def train_custom_mlp(X_train, X_test, y_train, y_test):
     return acc
 
 # Modelos de sklearn algo mejor que la que exportamos a unity
-def train_sklearn_variant(X_train, X_test, y_train, y_test):
+def train_sklearn_variant(X_train, X_test, y_train_oh, y_test):
     print("\n>>> SKLEARN VARIANT (LBFGS + ReLu)...")
     clf = MLPClassifier(
         hidden_layer_sizes=tuple(HIDDEN_LAYERS_VARIANT),
         activation='relu', solver='lbfgs', max_iter=ITERATIONS_VARIANT,
         alpha=0.0001, learning_rate_init=0.001, random_state=SEED
     )
-    clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train_oh)
     
-    y_pred = clf.predict(X_test)
+    y_pred_oh = clf.predict(X_test)
+    y_pred = np.argmax(y_pred_oh, axis=1)
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy Variant: {acc*100:.2f}%")
     
@@ -131,14 +131,15 @@ def train_sklearn_variant(X_train, X_test, y_train, y_test):
     return acc
 
 # --- KNN ---
-def train_knn(X_train, X_test, y_train, y_test):
+def train_knn(X_train, X_test, y_train_oh, y_test):
     print("\n>>> Entrenando con KNN...")
     if not os.path.exists(EXPORT_DIR_KNN): os.makedirs(EXPORT_DIR_KNN)
     # metric = manhattan -> calcula distancias siguiendo angulos rectos (mejor para cuadricula)
     knn = KNeighborsClassifier(n_neighbors=5, metric='manhattan', weights='distance') 
-    knn.fit(X_train, y_train)
+    knn.fit(X_train, y_train_oh)
     
-    y_pred = knn.predict(X_test)
+    y_pred_oh = knn.predict(X_test)   # Pred OH
+    y_pred = np.argmax(y_pred_oh, axis=1) # To Labels
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy KNN: {acc*100:.2f}%")
     
@@ -147,29 +148,31 @@ def train_knn(X_train, X_test, y_train, y_test):
     return acc
 
 # --- ARBOLES DE DECISION ---
-def train_decision_tree(X_train, X_test, y_train, y_test): 
+def train_decision_tree(X_train, X_test, y_train_oh, y_test): 
     print("\n>>> Arbol de decision")
     if not os.path.exists(EXPORT_DIR_TREES) : os.makedirs(EXPORT_DIR_TREES)
 
     # Se puede cambiar la profundidad dependiendo de lo que se quiera memorizar
     clf = DecisionTreeClassifier(max_depth=20, random_state=SEED)
-    clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train_oh)
 
-    y_pred = clf.predict(X_test)
+    y_pred_oh = clf.predict(X_test)
+    y_pred = np.argmax(y_pred_oh, axis=1)
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy Decision Tree: {acc*100:.2f}%")
 
     save_confusion_matrix(y_test, y_pred, "Matriz Confusión Decision Tree", EXPORT_DIR_TREES, "conf_matrix_dtree.png")
     return acc
 
-def train_random_forest(X_train, X_test, y_train, y_test): 
+def train_random_forest(X_train, X_test, y_train_oh, y_test): 
     print("\n>>> RANDOM FOREST (Bosque Aleatorio)...")
     if not os.path.exists(EXPORT_DIR_TREES): os.makedirs(EXPORT_DIR_TREES)
 
     clf = RandomForestClassifier(n_estimators=100, max_depth=20, random_state=SEED)
-    clf.fit(X_train, y_train)
+    clf.fit(X_train, y_train_oh)
 
-    y_pred = clf.predict(X_test)
+    y_pred_oh = clf.predict(X_test)
+    y_pred = np.argmax(y_pred_oh, axis=1)
     acc = accuracy_score(y_test, y_pred)
     print(f"Accuracy Random Forest: {acc*100:.2f}%")
 
@@ -192,7 +195,7 @@ def create_mlp_for_unity(X_train):
     clf = MLPClassifier(
         hidden_layer_sizes=tuple(HIDDEN_LAYERS_COMPARE),
         activation='logistic',       
-        solver='sgd',                
+        solver='adam',                
         learning_rate='constant',   
         learning_rate_init=LEARNING_RATE_COMPARE,
         alpha=REGULARIZATION_COMPARE,            
@@ -224,14 +227,17 @@ def main(args_list=None):
        exit()
 
     X_train, X_test, y_train, y_test = load_and_split_data()
+
+    encoder = OneHotEncoder(sparse_output=False)
+    y_train_oh = encoder.fit_transform(y_train.reshape(-1, 1))
     
     if not os.path.exists(EXPORT_DIR_TRAINING): os.makedirs(EXPORT_DIR_TRAINING)
 
     
     if args.compare:
         print("--- COMPARACION ---")
-        acc_sk = train_sklearn_mlp(X_train, X_test, y_train, y_test)
-        acc_custom = train_custom_mlp(X_train, X_test, y_train, y_test)
+        acc_sk = train_sklearn_mlp(X_train, X_test, y_train_oh, y_test)
+        acc_custom = train_custom_mlp(X_train, X_test, y_train_oh, y_test)
         print(f"\nDiferencia: {abs(acc_sk - acc_custom)*100:.2f}%")
         if acc_sk > 0.8 and acc_custom > 0.8:
             print("OBJETIVO CUMPLIDO: Ambos > 80% con mismos parametros.")
@@ -241,13 +247,13 @@ def main(args_list=None):
    
     if args.sk:
         
-        train_sklearn_mlp(X_train, X_test, y_train, y_test)
+        train_sklearn_mlp(X_train, X_test, y_train_oh, y_test)
 
-    if args.custom: train_custom_mlp(X_train, X_test, y_train, y_test)
-    if args.skvariant: train_sklearn_variant(X_train, X_test, y_train, y_test)
-    if args.knn: train_knn(X_train, X_test, y_train, y_test)
-    if args.dt: train_decision_tree(X_train, X_test, y_train, y_test)
-    if args.rf: train_random_forest(X_train, X_test, y_train, y_test)
+    if args.custom: train_custom_mlp(X_train, X_test, y_train_oh, y_test)
+    if args.skvariant: train_sklearn_variant(X_train, X_test, y_train_oh, y_test)
+    if args.knn: train_knn(X_train, X_test, y_train_oh, y_test)
+    if args.dt: train_decision_tree(X_train, X_test, y_train_oh, y_test)
+    if args.rf: train_random_forest(X_train, X_test, y_train_oh, y_test)
    
 # --- MAIN ---
 if __name__ == "__main__":
